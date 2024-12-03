@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Response Page</title>
+  <link rel="stylesheet" href="style.css">
+ 
+</head>
+<body>
+  <div id="responseContainer" class="response-container">
+
+    <h1>TR Correction</h1>
+    <div id="dataDisplay">
+    <p id="message-display"></p>
+      <div id="image-container" style="position: relative; height: 70px;">
+        
+      </div>
+      
+      <div id="inputs"></div>
+    </div>
+  </div>
+
+  <div id="buttonContainer" class="button-container">
+    <button id="previousButton">Previous</button>
+    <button id="nextButton">Next</button>
+  </div>
+
+  <script>
+    let img_number = 1; // Initialize img_number
+    let col_no = 1; // Initialize col_no (default value)
+    // Assuming this is the message you received from the backend
+
+// Display the message in the <p> tag
+
+
+    // Function to display backend data
+    const displayBackendData = (data) => {
+      const inputData = document.getElementById("inputs");
+      const dataDisplay = document.getElementById("dataDisplay");
+    
+      inputData.innerHTML = ""; // Clear previous inputs
+    
+      // Display the main image
+      if (data.image) {
+        
+        const img = document.createElement("img");
+        img.src = `data:image/jpeg;base64,${data.image}`;
+        img.alt = "Dynamic Image from Backend";
+        img.classList.add("main-image");
+    
+        const container = document.getElementById("image-container");
+  
+        // Set the image style for absolute positioning
+        img.style.position = "absolute";
+        img.style.top = "0";
+        img.style.width = "100%"; 
+        img.style.zIndex = container.children.length; 
+
+        container.appendChild(img);
+      }
+
+      // document.getElementById('message-display').textContent = data.message;
+
+              // Function to display the message temporarily
+        function showMessageTemporarily(message, duration = 3000) {
+            const messageDisplay = document.getElementById('message-display');
+            messageDisplay.textContent = message;
+
+            // Set a timeout to clear the message after the specified duration
+            setTimeout(() => {
+                messageDisplay.textContent = ''; // Clear the message
+            }, duration);
+        }
+
+       
+        
+        showMessageTemporarily(data.message, 1000); 
+    
+      // Display col_slices images
+      if (data.col_slices && Array.isArray(data.col_slices) && data.data) {
+        data.col_slices.forEach((slice, index) => {
+          const pairContainer = document.createElement("div");
+          pairContainer.className = "pair-container";
+    
+          const img = document.createElement("img");
+          img.src = `data:image/jpeg;base64,${slice}`;
+          img.alt = `Col Slice ${index + 1}`;
+          img.classList.add("col-slices");
+          pairContainer.appendChild(img);
+    
+          const inputBox = document.createElement("input");
+          inputBox.type = "text";
+          inputBox.value = data.data[index] || "";
+          inputBox.id = `input-box-${index}`;
+          inputBox.className = "input-style";
+          pairContainer.appendChild(inputBox);
+    
+          inputData.appendChild(pairContainer);
+        });
+      }
+    };
+    
+    // Retrieve and display data from localStorage
+    const responseData = localStorage.getItem("responseData");
+    if (responseData) {
+      const parsedData = JSON.parse(responseData);
+      displayBackendData(parsedData);
+    } else {
+      const container = document.getElementById("dataDisplay");
+      container.textContent = "No data available.";
+    }
+    
+    // Function to handle button clicks
+    function handleButtonClick(action) {
+      let url
+      if (action === "previous" && img_number > 1) {
+        img_number--;
+        url = 'http://192.168.1.34:5000/previous/';
+      } else if (action === "next") {
+        img_number++;
+        url = 'http://192.168.1.34:5000/correction/';
+      }
+    
+      console.log(`${action} clicked: img_number =`, img_number);
+    
+      // Collect input values
+      const inputs = document.querySelectorAll(".input-style");
+      const inputValues = Array.from(inputs).map((input) => input.value);
+    
+      // Retrieve and parse formData from localStorage
+      const storedFormData = localStorage.getItem("formData");
+      const formData = storedFormData ? JSON.parse(storedFormData) : {};
+    
+      // Prepare the payload
+      const payload = {
+        ...formData, // Include formData fields
+        col_no: col_no,
+        img_number: img_number,
+        correct_data: inputValues,
+         // Pass all input values
+      };
+    
+      // Send the data to the backend
+      sendDataToBackend(url , payload);
+    }
+    
+    // Attach event listeners
+    document.getElementById("previousButton").addEventListener("click", () => handleButtonClick("previous"));
+    document.getElementById("nextButton").addEventListener("click", () => handleButtonClick("next"));
+    
+    // Function to send data to the backend
+    const sendDataToBackend = (endpoint, payload) => {
+      fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Response from backend:", data);
+          displayBackendData(data); // Update UI with new data
+        })
+        .catch((error) => console.error("Error:", error));
+    };
+    </script>
+    
+</body>
+</html>

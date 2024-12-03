@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Path Form</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="form-container">
+    <h2>TR Form</h2>
+    <form id="fileForm">
+      <div class="form-group">
+        <label for="imageFolder">Image Folder Path</label>
+        <input type="text" id="imageFolder" name="imageFolder" required>
+      </div>
+      <div class="coordinate">
+      <div class="form-group">
+        <label for="coordinatePath">Coordinate Path</label>
+        <input type="text" id="coordinatePath" name="coordinatePath" required>
+      </div>
+      <button class="coordinateselect">Select Coordinates</button>
+    </div>
+      <!-- <div class="form-group">
+        <label for="databasePath">Database</label>
+        <input type="text" id="databasePath" name="databasePath" required>
+      </div> -->
+     
+        <div class="container2">
+            <!-- Row 1 -->
+            <div class="form-group2">
+                <label for="database">Database</label>
+                <input type="text" id="database" name='database' class="form-control2" placeholder="postgres">
+                <label for="user">User</label>
+                <input type="text" id="user" name='user' class="form-control2" placeholder="postgres">
+            </div>
+            <!-- Row 2 -->
+            <div class="form-group2">
+                <label for="host">Host</label>
+                <input type="text" id='host'name='host' class="form-control2" placeholder="localhost">
+                <label for="port">Port</label>
+                <input type="text" id='port'name='port' class="form-control2" placeholder="5432">
+            </div>
+            <!-- Row 3 -->
+            <div class="form-group2">
+                <label for="password">Password</label>
+                <input type="text" id="password" name='password' class="form-control2" placeholder="****">
+            </div>
+        </div>
+    
+      <div class="form-group">
+        <label for="tableName">Table Name</label>
+        <input type="text" id="tableName" name="tableName" required>
+      </div>
+      <div class="form-group">
+        <label for="newTableName">New Table Name</label>
+        <input type="text" id="newTableName" name="newTableName" required>
+      </div>
+     
+      <div class="form-group">
+        <label for="trType">TR Type</label>
+        <select  id="trType" name="trType" required>
+          <option value="52">52</option>
+          <option value="35">35</option>
+          <option value="44">44</option>
+          <option value="45">45</option>
+          <option value="50">50</option>
+          <option value="57">57</option>
+        </select>
+      </div>
+      <div class="form-btn">
+        <button type="submit">Submit</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+ // Event listener for form submission
+document.getElementById('fileForm').addEventListener('submit', function (event) {
+      event.preventDefault(); 
+     
+      const data = {
+        image_folder: document.getElementById('imageFolder').value, 
+        cordinate_file: document.getElementById('coordinatePath').value, 
+        // database_path: document.getElementById('databasePath').value, 
+        table_name: document.getElementById('tableName').value, 
+        tr_type: document.getElementById('trType').value, 
+        new_table_name: document.getElementById('newTableName').value, 
+
+        database: document.getElementById('database').value || 'postgres',
+        user: document.getElementById('user').value || 'postgres',
+        host: document.getElementById('host').value || 'localhost',
+        port: document.getElementById('port').value || '5432',
+        password: document.getElementById('password').value || 'postgres'
+        // img_number: document.getElementById('imgNumber').value, 
+        // correct_data: document.getElementById('correctData').value, 
+      };
+      console.log('data', data);
+      postData(data);
+    });
+
+
+    // Function to handle data posting
+    const postData = async (data) => {
+      try {
+
+        const response = await fetch('http://192.168.1.34:5000/home/', {
+          method: 'POST', 
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+
+        if (!response.ok) { 
+          throw new Error('Failed to save data. Please try again.');
+        }
+
+        const result = await response.json(); 
+       
+        console.log('Data saved successfully:', result); 
+           
+      // displayBackendData(result);
+			// Save the response data in localStorage
+      localStorage.setItem('responseData', JSON.stringify(result));
+      localStorage.setItem('formData', JSON.stringify(data));
+
+
+       // Redirect to the second page
+      window.location.href = 'ResponsePage.html';
+
+      } catch (error) {
+        alert('Error: ' + error.message); 
+        console.error('Error:', error); 
+      }
+    };   
+
+    document.querySelector('.coordinateselect').addEventListener('click', function () {
+     
+      // window.location.href = 'html_anchor.html';
+      window.open('html_anchor.html', '_blank');
+    });
+  </script>
+</body>
+</html>

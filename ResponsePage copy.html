@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Response Page</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="responseContainer" class="response-container">
+    <h2>Response Data</h2>
+    <div id="dataDisplay">
+      <div id="inputs"></div>
+    </div>
+  </div>
+
+  <div id="buttonContainer" class="button-container">
+      <button id="previousButton">Previous</button>
+      <button id="nextButton">Next</button>
+      <button id="saveButton">Save</button>
+    </div>
+
+  <script>
+
+      let col_no = 1;
+      let img_no = 0;
+
+    // Function to display backend data
+    const displayBackendData = (data) => {
+    const inputdata = document.getElementById('inputs');
+    const datadisplay = document.getElementById('dataDisplay');
+
+    if (data.image) {
+        const img = document.createElement('img');
+        img.src = `data:image/jpeg;base64,${data.image}`;
+        img.alt = 'Dynamic Image from Backend';
+        img.classList.add('main-image');
+        datadisplay.appendChild(img);
+    }
+
+    if (data.col_slices) {
+        const img = document.createElement('img');
+        img.src = `data:image/jpeg;base64,${data.col_slices}`;
+        img.alt = 'Dynamic Image from Backend';
+        img.classList.add('col-slices');
+        inputdata.appendChild(img);
+    }
+
+    if (data.data) {
+        const inputBox = document.createElement('input');
+        inputBox.type = 'text';
+        inputBox.value = data.data;
+        inputBox.id = 'input-box';
+        inputBox.className = 'input-style';
+        inputdata.appendChild(inputBox);
+    }
+};
+
+    // Retrieve and display data from localStorage
+    const responseData = localStorage.getItem('responseData');
+    if (responseData) {
+      const parsedData = JSON.parse(responseData);
+      displayBackendData(parsedData);
+    } else {
+      const container = document.getElementById('dataDisplay');
+      container.textContent = 'No data available.';
+    }
+    const formData = localStorage.getItem('formData');
+    if (formData) {
+      const parsedData = JSON.parse(formData);    
+    }
+
+    // Function to send data to the backend
+    const sendDataToBackend = (endpoint, payload) => {
+      fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log('Response from backend:', data);
+          // Update the UI with the response if needed
+          // displayBackendData([]);
+          displayBackendData(data);
+        })
+        .catch((error) => console.error('Error:', error));
+    };
+      // Function to handle sending data to the backend
+      function handleButtonClick(action) {
+        // Update col_no or img_no based on the action
+        if (action === 'previous' && col_no > 1) {
+          col_no--;
+          console.log('Previous clicked: col_no =', col_no);
+        } else if (action === 'next') {
+          col_no++;
+          console.log('Next clicked: col_no =', col_no);
+        } else if (action === 'save') {
+          img_no++;
+          console.log('Save clicked: img_no =', img_no);
+        }
+
+        // Get the value of the input box
+        const inputBox = document.getElementById('input-box');
+        const inputValue = inputBox ? inputBox.value : '';
+
+        // Retrieve and parse formData from localStorage
+        const storedFormData = localStorage.getItem('formData');
+        const formData = storedFormData ? JSON.parse(storedFormData) : {};
+
+        // Prepare the payload by merging formData with additional properties
+        const payload = {
+          ...formData, // Include all formData fields
+          col_no: col_no,
+          img_no: img_no,
+          value: inputValue,
+        };
+
+        // Send the data to the backend
+        sendDataToBackend('http://192.168.1.34:5000/correction/', payload);
+      }
+
+      // Attach event listeners to buttons
+      document.getElementById('previousButton').addEventListener('click', () => handleButtonClick('previous'));
+      document.getElementById('nextButton').addEventListener('click', () => handleButtonClick('next'));
+      document.getElementById('saveButton').addEventListener('click', () => handleButtonClick('save'));
+
+
+  </script>
+</body>
+</html>
